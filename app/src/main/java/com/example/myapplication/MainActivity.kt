@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RectangleShape // Explicitly ensure this is here
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.example.myapplication.network.RetrofitInstance
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.shape.RectangleShape
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,7 +74,7 @@ fun RomDownloaderApp() {
                                 modifier = Modifier
                                     .border(2.dp, MaterialTheme.colorScheme.outline)
                                     .height(32.dp),
-                                shape = RectangleShape, // Remove rounded corners
+                                shape = RectangleShape, // Should resolve now
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (selectedSystem == system) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
@@ -118,22 +118,4 @@ fun RomDownloaderApp() {
 }
 
 @Composable
-fun RomItem(title: String, isSelected: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp), // Minimal padding
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = isSelected,
-            onCheckedChange = onCheckedChange,
-            modifier = Modifier.padding(end = 4.dp)
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodySmall, // Smaller text for density
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
+fun RomItem(title: String, isSelected: Boolean, onCheckedChange: (Boolean
