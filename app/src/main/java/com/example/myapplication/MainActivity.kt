@@ -1,19 +1,23 @@
 package com.example.myapplication
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.myapplication.network.RetrofitInstance
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import com.example.myapplication.Rom // Add this
-import com.example.myapplication.network.RetrofitInstance // Add this
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.shape.RectangleShape
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,11 +36,15 @@ class MainActivity : ComponentActivity() {
 fun RomDownloaderApp() {
     val roms = remember { mutableStateListOf<Rom>() }
     val selectedRoms = remember { mutableStateListOf<Rom>() }
+    val coroutineScope = rememberCoroutineScope()
+    val systems = listOf("NS", "GC", "PS2", "WII", "PSP")
+    var selectedSystem by remember { mutableStateOf("NS") }
 
+    // Fetch ROMs (mock data for now)
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             try {
-                val fetchedRoms = RetrofitInstance.api.getRoms() // No path needed
+                val fetchedRoms = RetrofitInstance.api.getRoms()
                 roms.clear()
                 roms.addAll(fetchedRoms)
             } catch (e: Exception) {
@@ -45,14 +53,46 @@ fun RomDownloaderApp() {
         }
     }
 
+    // Filter ROMs by selected system
+    val filteredRoms = remember(selectedSystem) {
+        roms.filter { it.title.contains(selectedSystem, ignoreCase = true) }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(title = { Text("ROM Downloader") })
+            TopAppBar(
+                title = { Text("ROM Downloader") },
+                actions = {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        systems.forEach { system ->
+                            OutlinedButton(
+                                onClick = { selectedSystem = system },
+                                modifier = Modifier
+                                    .border(2.dp, MaterialTheme.colorScheme.outline)
+                                    .height(32.dp),
+                                shape = RectangleShape, // Remove rounded corners
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = if (selectedSystem == system) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                                )
+                            ) {
+                                Text(
+                                    text = system,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+                        }
+                    }
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                println("Selected ROMs: $selectedRoms")
+                Log.d("RomDownloader", "Selected ROMs: $selectedRoms")
             }) {
                 Text("Download (${selectedRoms.size})")
             }
@@ -63,7 +103,7 @@ fun RomDownloaderApp() {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            items(roms) { rom ->
+            items(filteredRoms) { rom ->
                 RomItem(
                     title = rom.title,
                     isSelected = rom in selectedRoms,
@@ -79,23 +119,21 @@ fun RomDownloaderApp() {
 
 @Composable
 fun RomItem(title: String, isSelected: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .padding(horizontal = 4.dp, vertical = 2.dp), // Minimal padding
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Checkbox(
-                checked = isSelected,
-                onCheckedChange = onCheckedChange
-            )
-        }
+        Checkbox(
+            checked = isSelected,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.padding(end = 4.dp)
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall, // Smaller text for density
+            modifier = Modifier.weight(1f)
+        )
     }
 }
