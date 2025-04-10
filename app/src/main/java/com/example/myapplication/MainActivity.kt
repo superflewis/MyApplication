@@ -34,12 +34,14 @@ fun RomDownloaderApp() {
     val selectedRoms = remember { mutableStateListOf<Rom>() }
 
     LaunchedEffect(Unit) {
-        try {
-            val fetchedRoms = RetrofitInstance.api.getRoms("roms.json")
-            roms.clear()
-            roms.addAll(fetchedRoms)
-        } catch (e: Exception) {
-            println("Error fetching ROMs: $e")
+        coroutineScope.launch {
+            try {
+                val fetchedRoms = RetrofitInstance.api.getRoms() // No path needed
+                roms.clear()
+                roms.addAll(fetchedRoms)
+            } catch (e: Exception) {
+                Log.e("RomDownloader", "Error fetching ROMs: $e")
+            }
         }
     }
 
