@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,11 +26,21 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // Add this annotation
 @Composable
 fun RomDownloaderApp() {
-    // Placeholder ROM list (replace with real data later)
-    val roms = remember { mutableStateListOf("Super Mario", "Zelda", "Metroid") }
-    val selectedRoms = remember { mutableStateListOf<String>() }
+    val roms = remember { mutableStateListOf<Rom>() }
+    val selectedRoms = remember { mutableStateListOf<Rom>() }
+
+    LaunchedEffect(Unit) {
+        try {
+            val fetchedRoms = RetrofitInstance.api.getRoms("roms.json")
+            roms.clear()
+            roms.addAll(fetchedRoms)
+        } catch (e: Exception) {
+            println("Error fetching ROMs: $e")
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -38,7 +49,7 @@ fun RomDownloaderApp() {
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                println("Selected ROMs: $selectedRoms") // TODO: Start downloads
+                println("Selected ROMs: $selectedRoms")
             }) {
                 Text("Download (${selectedRoms.size})")
             }
@@ -51,7 +62,7 @@ fun RomDownloaderApp() {
         ) {
             items(roms) { rom ->
                 RomItem(
-                    title = rom,
+                    title = rom.title,
                     isSelected = rom in selectedRoms,
                     onCheckedChange = { isChecked ->
                         if (isChecked) selectedRoms.add(rom)
